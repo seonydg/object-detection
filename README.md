@@ -2,8 +2,9 @@
 
 # 목록
 1. Faster R-CNN
-2. yolov1 아키텍쳐 직접 구현
-3. data augmentation
+2. SSD
+3. yolov1 아키텍쳐 직접 구현
+4. data augmentation
 
 ---
 # 1. Faster R-CNN
@@ -33,3 +34,25 @@ Confidence Score는 박스 안에 객체가 있을 Score의 값이다. Confidenc
 
 Loss functions은  classification loss와 바운딩 박스 regression loss를 함계 사용한다.
 그리고 평가 지표로는 mAP(mean Average Precision)을 사용한다. AP는 Precision-recall 그래프를 단조 감소 함수로 변경한 후 계산한 면적이며, 복수의 class에 대한 AP 값의 평균을 mAP라고 한다.
+
+
+---
+# 2. SSD
+# SSD(ECCV 2016)
+'SSD'는 'Faster R-CNN'의 개선 버전이라고 볼 수 있다.
+Faster R-CNN에서 앵커 박스의 크기가 유연하지 못하다는 단점과 3개의 sub-network들이 유기적으로 작동하는 가에 대한 의문점이 있다.
+
+SSD는 Feature pyramid를 사용하면 앵커 박스의 크기가 달라진다는 점에 초점을 맞춘다. 아래의 a 이미지에서 2개의 객체는 크기가 다른데, 고정된 앵커 박스의 크기가 8×8 feature maps에서는 고양이를 4×4 feature maps에서는 개를 탐지하게 된다. 즉 앵커 박스는 그대로지만 feature maps의 크기가 바뀜으로써 앵커 박스가 상대적으로 커지는 효과를 가지게 된다.
+
+![](https://velog.velcdn.com/images/seonydg/post/a6faa27d-e738-4fc1-a0b5-0e357c42cc10/image.png)
+
+기존부터 CNN 계열은 multi-scale-feature map을 사용해왔다. 아래의 그림과 같이 feature map 사이즈를 줄여가며 학습을 진행한 것에 착안한다.
+
+![](https://velog.velcdn.com/images/seonydg/post/669d8e28-4512-49ca-8c69-81db4d01a3a0/image.png)
+
+그래서 feature map이 큰 쪽에서는 작은 객체들을, 작은 쪽에서는 큰 객체들을 탐지하게 된다.
+300×300 feature map을 받아서 38×38 feature map에서는 38×38×4를 그 다음 레졸루션부터는 feature map × feature map × 6 또는 4의 앵커 박스가 생기게 된다. 그래서 탐지하는 앵커 박스의 수는 8732개가 생기게 된다. 그리고 최종적으로 NMS를 적용하여 바운딩 박스를 정하게 된다.
+
+![](https://velog.velcdn.com/images/seonydg/post/d53425f7-bbf5-4e35-ae16-ec2ec1d29f5b/image.png)
+
+detection model들은 포지티브 샘플(pos sample)에 비해 네거티브 샘플(neg sample)이 많을 수 밖에 없다. 그래서 학습에서 언벨런스가 생기고, 이것을 해결하기 위해 네거티브 샘플들 중에서 confidence score가 굉장히 높은 네거티브 샘플들만 학습에 사용하면서(약 1:3비율) 비율을 맞췄다.
