@@ -4,7 +4,7 @@
 1. Faster R-CNN
 2. SSD
 3. yolov1 아키텍쳐 직접 구현
-4. data augmentation
+4. yolov1 아키텍쳐 data augmentation
 
 ---
 # 1. Faster R-CNN
