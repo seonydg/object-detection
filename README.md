@@ -56,3 +56,27 @@ SSD는 Feature pyramid를 사용하면 앵커 박스의 크기가 달라진다�
 ![](https://velog.velcdn.com/images/seonydg/post/d53425f7-bbf5-4e35-ae16-ec2ec1d29f5b/image.png)
 
 detection model들은 포지티브 샘플(pos sample)에 비해 네거티브 샘플(neg sample)이 많을 수 밖에 없다. 그래서 학습에서 언벨런스가 생기고, 이것을 해결하기 위해 네거티브 샘플들 중에서 confidence score가 굉장히 높은 네거티브 샘플들만 학습에 사용하면서(약 1:3비율) 비율을 맞췄다.
+
+
+# 3. yolov1 아키텍쳐 직접 구현
+# Yolo(CVPR 2016)
+yolo에서는 3단계를 통해 간단하고 실시간으로 객체 탐지를 할 수 있다.
+첫 단계는 이미지를 resize하고 두 번째는 convolutional network를 통과하고 마지막으로 Non-maximum supperssion을 수행하는 것이다.
+
+![](https://velog.velcdn.com/images/seonydg/post/00a66d85-8431-4dcb-b57c-6520c5f3e554/image.png)
+
+yolo는 S×S로 이미지를 grid로 나누어서 하나의 grid마다 바운딩 박스를 2개씩 추론하고 해당 박스에 객체가 있는지 없는지에 대한 confidence를 같이 학습한다.
+그리고 grid마다 클래스가 어떤 클래스에 속하는지 판단한다. 가장 높은 confidence score 박스에 가장 많이 포함되어 있는 class probability로 최종 클래스를 결정하게 된다.
+Faster R-CNN, SSD는 백그라운드를 가리키는 바운딩 박스가 매우 많아 조절을 해야 했던 반면, yolo는 어떤 객체도 가리키지 않는 grid를 백그라운드로 인식하기에 접근 방식이 다르다.
+
+![](https://velog.velcdn.com/images/seonydg/post/3c15b291-6808-40e2-8c1c-4148c8503a16/image.png)
+
+feature map은 448×448로 크기로 입력이 들어오고 최종 출력은 7×7 feature resolution을 가지며, 7×7에서의 한 픽셀들이 하나의 grid가 된다.
+7×7의 한 픽셀이 30개 dimension을 가지는데, 4개의 바운딩 박스 코디네이트와 해당 바운딩 박스에 대한 confidence score가 2개 존재한다. 그리고 20 classes에 대한 classification이 존재한다. 그래서 총 30개의 dimension을 가진다.
+
+![](https://velog.velcdn.com/images/seonydg/post/53ab0f04-cca1-43d4-af5c-8fc17500ffc0/image.png)
+
+Training Loss Funtions은 기존의 SSD, Faster R-CNN의 백그라운드 영역에 대한 바운딩 박스를 어떻게 핸들링 할 것인지가 이슈였던 반면, yolo는 객체가 있는 grid와 없는 grid로 나눠서 Loss Function을 구성한다.
+
+![](https://velog.velcdn.com/images/seonydg/post/ea2f4d59-163d-4406-b649-4076e60277c8/image.png)
+
