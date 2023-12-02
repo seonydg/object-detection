@@ -12,11 +12,11 @@ class EfficientDetBackbone(nn.Module):
         super(EfficientDetBackbone, self).__init__()
         self.compound_coef = compound_coef
 
-        self.backbone_compound_coef = [0, 1, 2, 3, 4, 5, 6, 6, 7]
-        self.fpn_num_filters = [64, 88, 112, 160, 224, 288, 384, 384, 384]
-        self.fpn_cell_repeats = [3, 4, 5, 6, 7, 7, 8, 8, 8]
-        self.input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
-        self.box_class_repeats = [3, 3, 3, 4, 4, 4, 5, 5, 5]
+        self.backbone_compound_coef = [0, 1, 2, 3, 4, 5, 6, 6, 7] # 파이 값
+        self.fpn_num_filters = [64, 88, 112, 160, 224, 288, 384, 384, 384] # 파이 값에 따른 BiFPN channels
+        self.fpn_cell_repeats = [3, 4, 5, 6, 7, 7, 8, 8, 8] # 파이 값에 따른 BiFPN layers(반복)
+        self.input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536] # 파이 값에 따른 input size(Resize)
+        self.box_class_repeats = [3, 3, 3, 4, 4, 4, 5, 5, 5] # 파이 값에 따른 box/class layers
         self.pyramid_levels = [5, 5, 5, 5, 5, 5, 5, 5, 6]
         self.anchor_scale = [4., 4., 4., 4., 4., 4., 4., 5., 4.]
         self.aspect_ratios = kwargs.get('ratios', [(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)])
@@ -36,6 +36,7 @@ class EfficientDetBackbone(nn.Module):
 
         num_anchors = len(self.aspect_ratios) * self.num_scales
 
+        # BiFPN 정의
         self.bifpn = nn.Sequential(
             *[BiFPN(self.fpn_num_filters[self.compound_coef],
                     conv_channel_coef[compound_coef],
@@ -56,7 +57,7 @@ class EfficientDetBackbone(nn.Module):
         self.anchors = Anchors(anchor_scale=self.anchor_scale[compound_coef],
                                pyramid_levels=(torch.arange(self.pyramid_levels[self.compound_coef]) + 3).tolist(),
                                **kwargs)
-
+        # backbone 정의 : EfficientNet
         self.backbone_net = EfficientNet(self.backbone_compound_coef[compound_coef], load_weights)
 
     def freeze_bn(self):
@@ -67,7 +68,7 @@ class EfficientDetBackbone(nn.Module):
     def forward(self, inputs):
         max_size = inputs.shape[-1]
 
-        _, p3, p4, p5 = self.backbone_net(inputs)
+        _, p3, p4, p5 = self.backbone_net(inputs) # backbone network에서 3, 4, 5만 사용
 
         features = (p3, p4, p5)
         features = self.bifpn(features)

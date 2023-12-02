@@ -36,7 +36,7 @@ class SeparableConvBlock(nn.Module):
             self.bn = nn.BatchNorm2d(num_features=out_channels, momentum=0.01, eps=1e-3)
 
         self.activation = activation
-        if self.activation:
+        if self.activation: # 활성함수
             self.swish = MemoryEfficientSwish() if not onnx_export else Swish()
 
     def forward(self, x):
@@ -51,7 +51,7 @@ class SeparableConvBlock(nn.Module):
 
         return x
 
-
+# BiFPN 정의
 class BiFPN(nn.Module):
     """
     modified by Zylo117
@@ -99,7 +99,7 @@ class BiFPN(nn.Module):
         if use_p8:
             self.p7_upsample = nn.Upsample(scale_factor=2, mode='nearest')
             self.p8_downsample = MaxPool2dStaticSamePadding(3, 2)
-
+        # 활성 함수
         self.swish = MemoryEfficientSwish() if not onnx_export else Swish()
 
         self.first_time = first_time
@@ -206,6 +206,7 @@ class BiFPN(nn.Module):
             # P3_0, P4_0, P5_0, P6_0 and P7_0
             p3_in, p4_in, p5_in, p6_in, p7_in = inputs
 
+        # 블럭 연결 부
         # P7_0 to P7_2
 
         # Weights for P6_0 and P7_0 to P6_1
