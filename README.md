@@ -96,15 +96,16 @@ NAS는 노말셀과 리덕션셀 두 가지를 찾는데, 너무 복잡하게 �
 
 이 후에는 얼마나 Efficient하게 그리고 아키텍쳐 상에서 채널의 수나 블록의 반복 횟수들에 대한 방향으로 가게 된다. 그래서 NAS의 큰 틀은 비슷하나 새로운 아키텍쳐를 찾는다기 보다는 최적화된 아키텍쳐를 기계가 자동으로 찾아가는 방향 접근하게 된다.
 
-그렇게 나온 논문이 EfficientNet(CVPR 2019)이다.
+그렇게 나온 논문이 아래 그림의 EfficientNet(CVPR 2019)이다.
 
-![업로드중..](blob:https://velog.io/52aafb90-a8c9-4137-bcb6-b0bde9431234)
+![](https://velog.velcdn.com/images/seonydg/post/a1dafb60-26a0-48b5-91e6-6a3019095fb5/image.png)
+
 
 채널 수, 레이어, 입력 영상의 레졸루션 등을 scaling하면서 찾아보겠다는 것이다. 리소스가 굉장이 많이 드는 연구로 일반적으로 접근하기에는 어려움이 있다. 
 
 **EfficientDet**은 EfficientNet을 detection용으로 바꿔서 제안한 방법이다. 기존의 state of the Art Method보다 좋은 성능을 보여준다. 
 
-![업로드중..](blob:https://velog.io/676e1635-7db0-4721-92c6-415fa8975981)
+![](https://velog.velcdn.com/images/seonydg/post/8cbf63da-5f63-4b21-b46b-c7544f0bf5f6/image.png)
 
 EfficientDet은 크게 3가지를 제안한다.
 - Cross-scale connections
@@ -113,7 +114,7 @@ EfficientDet은 크게 3가지를 제안한다.
 
 ### 1. Cross-scale connections
 
-![업로드중..](blob:https://velog.io/1a0226de-501f-437e-975a-7a4762a9f568)
+![](https://velog.velcdn.com/images/seonydg/post/f44c3b46-5415-42f0-9632-46a29ac2f7df/image.png)
 
 FPN에서 P의 숫자가 클 수록 피쳐 레졸루션이 작은 상태인데, 레졸루션을 줄여나가다가 다시 레졸루션을 키우면서 이전의 피쳐들에 맞게 스케일링 혹은 더하는 방법으로 합친다. 그리고 다시 출력을 통해서 최종 detection 성능을 뽑는 방법으로 사용된다. U-Net과 비슷하지만, U-Net은 다시 P0까지 업스케일링 후에 출력을 한 것에 반해서 FPN은 원하는 결과 출력부에 Head를 연결시켜서 출력을 하게 된다.
 PANet은 FPN의 다운과 업을 반복하는 방법을 제안했다.
@@ -122,26 +123,27 @@ BiFPN은 기존의 FPN과 같이 레졸루션의 연결이 올라갔다가 내�
 
 ### 2. Weighted feature fusion
 
-![업로드중..](blob:https://velog.io/dbb6900c-1c7b-4b4e-b559-983049898367)
+![](https://velog.velcdn.com/images/seonydg/post/8fd605ae-d19c-41aa-bb30-21ac69920f5f/image.png)
 
 각각의 features에 가중치를 줘서 합한다. unbounded fusion은 각 피쳐 맵마다 어떤 가중치를 정해줘서 최종 출력을 정하게 된다.
 
-![업로드중..](blob:https://velog.io/eb47e2bd-0029-40aa-b1cc-6bac8f985cc8)
+![](https://velog.velcdn.com/images/seonydg/post/d6bedf89-9f32-4011-8553-78be5a3f95cb/image.png)
 
 EfficientDet 논문에서는 unbounded fusion보다 softmax-based fusion을 하는 것이 좋다고 제안한다. 하지만 softmax-based fusion은 계산량이 많이 들어가게 된다.
 
-![업로드중..](blob:https://velog.io/3f491ae9-18ab-4dde-b7a2-d8c27a851db9)
+![](https://velog.velcdn.com/images/seonydg/post/5f5ff3b1-65f6-4460-a21d-1a54b35c4661/image.png)
+
 
 그래서 비슷한 형태를 가지지만 e의 지수승을 계산하기 보다 하나의 변수로 변경을 한 fast normalized fusion을 제안한다.
 
 예로 아래의 P6의 td.
 
-![업로드중..](blob:https://velog.io/bc8380ee-fe7b-4e45-bfad-8a87c9f3783b)
+![](https://velog.velcdn.com/images/seonydg/post/b324cac8-6bfb-4344-8c67-b060169bc71d/image.png)
 
 
 ### 3. Compound scaling
 
-![업로드중..](blob:https://velog.io/9761fe6a-8355-4b2c-9494-beb5610021d1)
+![](https://velog.velcdn.com/images/seonydg/post/98a41891-b69c-4007-ae0b-bd5fbba6a6d1/image.png)
 
 논문에서는 스케일링 팩터 파이를 정한 다음에, 그 파이에 따라서 반복 횟수, 영상 레졸루션 등을 정하게 된다.
 W(bifpn)는 채널수, D(bifpn)는 BiFPN 레이어를 몇 번 반복할지 정의, D(box, class)는 네트워크에 있는 conv의 수, R(input)은 입력으로 파이가 증가함에 따라서 선형적으로 증가하도록 정의가 되어 있다.
@@ -149,6 +151,15 @@ W(bifpn)는 채널수, D(bifpn)는 BiFPN 레이어를 몇 번 반복할지 정�
 아래와 같이 표로 정리해 볼 수 있다.
 이렇게 미리 정의함으로써 네트워크가 심플해진다.
 
-![업로드중..](blob:https://velog.io/adbeeca2-7e4e-40f0-828b-ca95d85f47db)
+![](https://velog.velcdn.com/images/seonydg/post/64f35233-804d-451d-a47a-31cb91617b02/image.png)
 
-![업로드중..](blob:https://velog.io/f9098275-ce40-4191-9c83-7d54a4c4d2c8)
+![](https://velog.velcdn.com/images/seonydg/post/7f292fd7-0b76-4aa2-8ccc-977887b36e42/image.png)
+
+
+### Loss Function
+
+Loss Function은 RetinaNet에서 사용한 Focal Loss를 사용한다. 
+Pt는 score는 에측하지 못한 0과 잘 예측한 값 1사이의 값을 가지는데, CE(cross entropy loss)가 0이면 inf loss를 1이면 loss를 받지 않는다. CE는 잘못 예측한 경우에 패털티를 부여하는데 초점을 맞춘 것이다. 그래서 샘플 수가 다른 것에 대해서도 모두 같은 loss값을 주기때문에 누적이 되면 샘플 수가 많은(백그라운드) 것에 예측을 잘 하지만 정답에 대해서는 예측을 잘 하지 못하는 경우가 발생한다.
+Focal Loss는 예측된 확륙값을 기반으로 Loss를 조절하는 방법이다. 기존의 CE에 **'(1 - pt)^gamma'**을 곱해준다. 그래서 gamma가 0이면 CE와 같고 커질수록 x축과 가까워지는 형태가 된다.
+
+![image](https://github.com/seonydg/object-detection/assets/85072322/58f13024-4460-4c76-b2a0-a7ef62b845ef)
