@@ -7,6 +7,7 @@
 4. yolov1 아키텍쳐 data augmentation
 5. EfficientDet
 6. Swin Transformer
+7. Finding Tiny Faces
 
 ---
 # 1. Faster R-CNN
@@ -359,3 +360,69 @@ Swin Transformer의 아키텍쳐를 보면, 가장 작은 패치 단위를 1/4×
 LN은 layers normalization, W-MSA는 Window Multi-Head Self-Attention, SW-MSA는 Shifted-Window Multi-Head Self-Attention방법으로, 전체 구성은 ViT와 비슷하게 되어 있다.
 
 ![](https://velog.velcdn.com/images/seonydg/post/a713a14d-2949-4572-80ac-da67d21d63c6/image.png)
+
+---
+# 7. Finding Tiny Faces
+# Finding Tiny Faces(CVPR 2017)
+
+아주 작은 얼굴들을 탐지하기 위해서 어떤 기술적 테크닉들이 필요한지 살펴보자.
+
+![](https://velog.velcdn.com/images/seonydg/post/5bea9c94-b147-49f9-a964-4535a18c740f/image.png)
+
+객체 탐지를 위해 5가지의 approaches를 이야기 한다.
+
+먼저 고정된 사이즈의 얼굴을 디텍션할 수 있는 템플릿을 정해놓고 이미지 피라미드를 만들어서 해당 얼굴 영역을 찾는다. 원본 상태에서 영상 크기를 줄여가며 여러 템플릿에 탐지를 하여 구체적인 얼굴이 매칭되는 것을 찾을 수 있도록 한다.
+그리고 기존의 SSD나 YOLO처럼 이미지 안의 여러 스캐일별 얼굴을 탐지할 수 있는 방법으로 찾는다.
+나머지 3가지 테크닉을 제시한다.
+먼저 이미지 피라미드를 만들고 이미지의 스케일과 템플릿(앵커 박스)의 크기를 복합해서 쓰며, 얼굴만이 아니라 fixed-size의 얼굴을 포함하는 것을 보고 분류를 해야한다고 제시한다. 마지막으로 마지막 레이어의 피쳐만 사용하는 것이 아니라 앞쪽 레이어의 리쳐들도 함께 사용해야 함을 제시한다.
+
+![](https://velog.velcdn.com/images/seonydg/post/dbd90ec9-f21f-4b19-86c3-ca0d287f789e/image.png)
+
+![](https://velog.velcdn.com/images/seonydg/post/26b28efb-bbb0-4afd-b1d7-c670eff7c6b3/image.png)
+
+
+기존의 SSD나 YOLO 및 ResNet 등에서 사용되던 방법들이다. 그래서 무엇이 다른가.
+
+### Context information to find small faces
+아래의 그림에서 왼쪽 위의 그림은 작은 얼굴을 아래는 큰 얼굴을 갖는 그림이다. 그리고 초록색은 작은 바운딩 박스를 파란색은 얼굴에 맞는 세배 비율의 박스를 노란색은 fixed-size로 얼굴에 상관없이 300필셀로 구분을 한다.
+
+아래 오른쪽 그림은 얼굴 사이즈가 다를 때의 결과인데, context를 반영한 것이 결과가 더 좋다는 것을 반영하고 있는 그림이다. 이 성능의 차이가 사이즈가 작아질수록 fixed-size가 훨씬 좋음을 알 수 있다.
+
+![](https://velog.velcdn.com/images/seonydg/post/d8f1dfc5-8cca-4b85-99da-e4be901ef49c/image.png)
+
+아래 그림에서, face size를 두고 receptive field가 커질수록 정확도가 높아지는 경향이 있음을 알 수 있다.
+
+![](https://velog.velcdn.com/images/seonydg/post/94212531-806e-4000-99be-4c704fd09e4a/image.png)
+
+
+
+### Foveal descriptor using multiple layers in a deep network
+하나의 피쳐만 사용하는 것이 아니라, ResNet skip-connector처럼 앞쪽 레이어의 피쳐를 더했을 때 성능이 더 좋아지는 것을 확인할 수 있다. 특히 **res3-4**까지는 비슷하나 **res5**까지 가서 비교를 했을 때 확연한 차이가 있고 작은 얼굴을 탐지할 때 월등한 성능 향상이 있음을 확인할 수 있다. 그래서 논문에서는 Context information을 위해서 무조건 마지막 레이어에서만 결과를 출력하는 것은 반드시 좋은 결과를 나타내지 않는다고 주장한다.
+
+![](https://velog.velcdn.com/images/seonydg/post/01fa93ab-7e57-4deb-9e62-a9b454d09222/image.png)
+
+
+
+### Image scale
+얼굴의 크기에 따라서 객체 탐지의 성능이 달라지는데, 그렇다면 얼굴을 탐지하기 위해서 가장 좋은 패치 사이즈는 얼마인지를 고민하게 된다. 
+
+아래 오른쪽 그림에서 작은 얼굴은 사이즈를 2배 키웠을 때 약 10% 정도의 성능 향상을 가지고, 큰 얼굴은 사이즈를 2배 줄였을 때 약 5% 정도의 성능 향상을 가지고 있다. 즉 무조건 얼굴 사이즈가 크다고 성능 향상과 직결되지는 않는다고 주장한다. 그래서 논문 저자들은 객체의 크기보다 크기들의 분포에 이슈가 있다고 말한다. 
+
+아래 왼쪽 그림에서처럼, 너무 작은 사이즈나 큰 사이즈는 샘플 수가 부족해서 탐지가 안되는 것이라 주장을 한다. 
+
+![](https://velog.velcdn.com/images/seonydg/post/437dfe2e-5646-4aa4-8ae5-7a40c7eb99ea/image.png)
+
+
+그렇다면 어떻게 사이즈가 다른 객체들을 크기에 상관없이 잘 탐지할 수 있을까.
+논문에서는, CNN 모델을 특정한 객체 사이즈에 맞춰 학습하는 방법을 제시하게 된다. 
+
+입력 영상이 주어졌을 때, 기존 영상과 2배 키운 영상과 2배 줄인 영상인 3가지의 피라미드를 만들고 end-to-end로 학습을 진행한다. 그리고 기존의 영상에서는 중간 정도의 객체를 2배 키운 영상에서는 작은 객체를 반으로 줄인 영상에서는 큰 객체를 추출을 한다. 즉 바운딩 박스의 필셀 크기로 로스를 정의하고 탐지를 한다. 그리고 추출된 객체들을 합치고 NMS를 통해 최종 출력을 하게 된다.
+
+![](https://velog.velcdn.com/images/seonydg/post/6efc6af9-793f-41ca-976c-d6e6cc31f90e/image.png)
+
+
+결과를 보면 반으로 줄인 사이즈에서는 큰 얼굴의 탐지가 잘 되고, 2배로 키운 사이즈는 큰 얼굴은 탐지가 잘 되지 않고 작은 얼굴일수록 탐지가 잘 되는 것을 볼 수 있다. 
+영상의 사이즈별로 탐지를 잘하는 영역이 다르기에, 잘 하는 영역에 맞게 최종 출력물의 모델을 다르게 써서 문제를 해결한다. 그래서 모든 사이즈들을 모두 합쳐서 출력을 내면 Full Model이고, 2가지를 합친 Model이나 하나의 Model도 사용할 수 있다. 아래의 오른쪽 그림은 그것에 대한 결과물이다. 데이터셋과 그 결과물을 보면서 해당 데이터셋에 맞는 모델을 선정하면 될 것이다.
+
+
+![](https://velog.velcdn.com/images/seonydg/post/72ea79ea-eb34-4c44-9cbd-53aca21ac595/image.png)
