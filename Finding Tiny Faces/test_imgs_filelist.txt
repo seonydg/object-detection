@@ -1,0 +1,4 @@
+test_imgs/0_Parade_marchingband_1_5.jpg
+test_imgs/51_Dresses_wearingdress_51_10.jpg
+test_imgs/51_Dresses_wearingdress_51_18.jpg
+test_imgs/59_peopledrivingcar_peopledrivingcar_59_245.jpg
