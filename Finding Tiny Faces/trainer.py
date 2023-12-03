@@ -85,7 +85,7 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
 
 
 def get_detections(model, img, templates, rf, img_transforms,
-                   prob_thresh=0.65, nms_thresh=0.3, scales=(-2, -1, 0, 1), device=None):
+                   prob_thresh=0.65, nms_thresh=0.3, scales=(-2, -1, 0, 1), device=None): # 논문보다 1개 많은 4개의 템플릿을 가진다.(1/4, 1/2, 1, 2의 스케일링)
     model = model.to(device)
     model.eval()
 
@@ -94,7 +94,7 @@ def get_detections(model, img, templates, rf, img_transforms,
     num_templates = templates.shape[0]
 
     # Evaluate over multiple scale
-    scales_list = [2 ** x for x in scales]
+    scales_list = [2 ** x for x in scales] # 1/4, 1/2, 1, 2
 
     # convert tensor to PIL image so we can perform resizing
     image = transforms.functional.to_pil_image(img[0])
